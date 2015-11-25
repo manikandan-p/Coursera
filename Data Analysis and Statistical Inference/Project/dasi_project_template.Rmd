@@ -1,0 +1,146 @@
+---
+title: "Association between Race and Unemployment"
+output:
+  html_document:
+    theme: cerulean
+  pdf_document: default
+date: "1.11.2015"
+---
+
+<!-- For more info on RMarkdown see http://rmarkdown.rstudio.com/ -->
+
+<!-- Enter the code required to load your data in the space below. The data will be loaded but the line of code won't show up in your write up (echo=FALSE) in order to save space-->
+```{r echo=FALSE}
+
+```
+
+<!-- In the remainder of the document, add R code chunks as needed -->
+
+### Introduction:
+Research Question: Does one's race play a role in determining a person is unemployed or not? I'm a Decision Scientist by profession and this was one of the questions that I've wanted to find an answer to through actual data. The project aims to find if there's a link between one's race and unemployment and statistically prove the same. 
+
+### Data:
+
+The dataset used here is the gss dataset.
+
+Data Citation: 
+        Smith, Tom W., Michael Hout, and Peter V. Marsden. General Social Survey, 1972-2012 [Cumulative File]. ICPSR34802-v1. Storrs, CT: Roper Center for Public Opinion Research, University of Connecticut /Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributors], 2013-09-11, http://doi.org/10.3886/ICPSR34802.v1
+
+Data Collection: 
+        The data was collected between 1972-2012 in the US. It was collected through computer-assisted personal interview (CAPI), face-to-face interview and telephone interview. The unit of observation here is the individual, the universe is all non-institutionalized, English and Spanish speaking persons 18 years of age or older, living in the United States. The data type is survey data.
+
+Data Cases(observational/experimental units): 
+        There are a total of 57,061 cases and 114 variables in this data set. The unit of observation is the individual, the population of interest is all non-institutionalized, English and Spanish speaking persons who are 18 years of age or older, residing in the US.
+
+Data Variables:
+        Race is the explanatory variable here and it is a categorical variable with three categories namely, white, black and others. unemp is the response variable that denotes the likeliness to find a job. Like race, it is a categorical variable as well and has two levels, yes and no
+
+Type of study: 
+      The type of study is an observational one because the data was collected in a way that does not directly interfere with how the data arises. It only establishes an association and it uses past data.
+
+Scope of inference - generalizability: 
+      The unit of observation is the individual and the population of interest is all non-institutionalized, English and Spanish speaking persons who are 18 years of age or older, residing in the US. The observational study is not causal, but generalizable because there was no random assignment but the sampling was random. 
+
+Sources of bias:  
+      Confounding variables could be: age (age of the individual), educ (level of education), degree (highest degree obtained), sex (gender), uscitizn (if respondent is a US citizen), income06 (total family income), marital(marital status). The sample is a Convenience sample - Non-response - Voluntary response.
+
+Scope of inference - causality: 
+      Causal links between the variables of interest can't be eastablished because no random assignment was done and it is an observational study, not an experiment. So we can establish only an association between the variables of interest.
+
+Displaying data from the gss dataset 
+```{r}
+load(url("http://bit.ly/dasi_gss_data"))
+names(gss)
+head(gss$race)
+head(gss$unemp)
+```
+Summary statistics of the gss dataset:
+```{r}
+summary(gss$race)
+summary(gss$unemp)
+```
+Creation of required project data(Removed NA values):
+```{r}
+project_data <- gss[,c("race","unemp")]
+project_data <- project_data[complete.cases(project_data),]
+head(project_data)
+head(project_data$race)
+head(project_data$unemp)
+```
+
+### Exploratory data analysis:
+Summary statistics of project_data dataset(target dataset):
+```{r}
+summary(project_data$race)
+summary(project_data$unemp)
+```
+
+Composition of race in the survey:
+
+The survey consists of majority of white respondents(83%) compared to respondents belonging to other races, as illustrated by the graph:
+
+```{r}
+barplot(table(project_data$race),ylim=c(0,30000),main="Composition of race in the survey",col=c("red","blue","green"),xlab="Race",ylab="Count")
+```
+
+Answers regarding unemployment in the survey:
+
+The majority of respondents(69%) have said that they have not been unemployed in the past 10 years, as illustrated by the graph:
+
+```{r}
+barplot(table(project_data$unemp),ylim=c(0,30000),main="Composition of Answers about  Unemployment",col=c("red","blue"),xlab="Answers in the survey",ylab="Count")
+```
+
+Stacked bar chart depicting the proportion of answers across races:
+```{r}
+barplot(table(project_data$race,project_data$unemp),ylim=c(0,30000),main="Unemployment across races in the survey",xlab="Answers regarding Unemployment",ylab="Count",col=c("green","red","blue"),legend=TRUE)
+```
+
+Contingency table:
+```{r}
+table(project_data)
+```
+
+Mosaic plot:
+```{r}
+mosaicplot(table(project_data$race,project_data$unemp),main="Unemployment across races",col=c("red","blue"))
+```
+
+From the graph, it might appear that unemployment is slightly more prevalent in other races compared to whites, we would need to perform hypothesis testing to prove the same.
+
+### Inference:
+The two Hypotheses statements are the following: 
+H_0: Unemployment and Race are independent. 
+H_A: Unemployment and Race are dependent. 
+
+List of conditions necessary for performing a chi-square test of independence:
+
+1.The observations should be independent - The type of study is an observational one because the data was collected in a way that does not directly interfere with how the data arises. The observational study is generalizable because the sampling was random
+
+2.Expected counts for each cell should be at least 5 (all the 6 cells have at least 5 counts) - it can be seen from the results of the inference function. Expected counts are calculated as: (row total*column total)/grand total
+
+3.degrees of freedom should be at least 2 (in this case there are 2 degrees of freedom). df= (R-1)(C-1) = (2-1)(3-1)=2, where R is the number of rows in the two-way table and C is the number of columns
+
+The inference method used here is hypothesis testing since we have two categorical variables, race having 3 levels and unemployment having two levels respectively. Other methods are not applicable here. The method of hypothesis testing is theoretical since the expected counts condition is satisfied.
+
+```{r}
+source("http://bit.ly/dasi_inference")
+inference(y=project_data$unemp, x=project_data$race, est = "proportion", type = "ht", method = "theoretical", alternative="greater")
+```
+
+### Conclusion:
+
+Given a very small p-value (less than 2.2e-16) and a large X-squared value (243.83), we can go ahead with rejecting the null hypothesis (at 5% significance level) and stating that the two variables race and unemployment are related. For future research, the confouding variables should be taken into account and the analysis should be done accordingly
+
+### References:
+
+Smith, Tom W., Michael Hout, and Peter V. Marsden. General Social Survey, 1972-2012 [Cumulative File]. ICPSR34802-v1. Storrs, CT: Roper Center for Public Opinion Research, University of Connecticut /Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributors], 2013-09-11, http://doi.org/10.3886/ICPSR34802.v1
+
+http://www.slideshare.net/marushabk/data-analysis-and-statistical-inference-project
+
+### Appendix:
+
+```{r}
+head(project_data)
+tail(project_data)
+```
